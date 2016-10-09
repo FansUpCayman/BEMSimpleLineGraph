@@ -296,7 +296,16 @@
 - (NSArray *)bottomPointsArray {
     CGPoint bottomPointZero = CGPointMake(0, self.frame.size.height);
     CGPoint bottomPointFull = CGPointMake(self.frame.size.width, self.frame.size.height);
-    NSMutableArray *bottomPoints = [NSMutableArray arrayWithArray:self.points];
+    NSMutableArray *bottomPoints;
+    if (self.bottomOffset == 0) {
+        bottomPoints = [NSMutableArray arrayWithArray:self.points];
+    } else {
+        bottomPoints = [NSMutableArray new];
+        for (NSValue *point in self.points) {
+            NSValue *offsetPoint = [NSValue valueWithCGPoint:CGPointMake(point.CGPointValue.x, point.CGPointValue.y + self.bottomOffset)];
+            [bottomPoints addObject:offsetPoint];
+        }
+    }
     [bottomPoints insertObject:[NSValue valueWithCGPoint:bottomPointZero] atIndex:0];
     [bottomPoints addObject:[NSValue valueWithCGPoint:bottomPointFull]];
     return bottomPoints;
