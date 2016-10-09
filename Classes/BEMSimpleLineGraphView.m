@@ -1045,7 +1045,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 /// Area on the graph that doesn't include the axes
 - (CGRect)drawableGraphArea {
 //  CGRectMake(xAxisXPositionFirstOffset, self.frame.size.height-20, viewWidth/2, 20);
-    NSInteger xAxisHeight = 20;
+    NSInteger xAxisHeight = 0;
     CGFloat xOrigin = self.positionYAxisRight ? 0 : self.YAxisLabelXOffset;
     CGFloat viewWidth = self.frame.size.width - self.YAxisLabelXOffset;
     CGFloat adjustedHeight = self.bounds.size.height - xAxisHeight;
