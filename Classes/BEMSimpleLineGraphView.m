@@ -621,6 +621,9 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     
     line.bottomOffset = self.bottomOffset;
     
+    line.headPointOuterRadius = self.headPointOuterRadius;
+    line.headPointInnerRadius = self.headPointInnerRadius;
+    
     [self addSubview:line];
     [self sendSubviewToBack:line];
     [self sendSubviewToBack:self.backgroundXAxis];

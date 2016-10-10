@@ -198,6 +198,31 @@
     lineAndFillLayer.contents = (id)lineAndFillImage.CGImage;
     lineAndFillLayer.frame = self.bounds;
     [self.layer addSublayer:lineAndFillLayer];
+    
+    //------ Draw The Head Point ------//
+    
+    CALayer *headPointLayer;
+    if (self.points.count > 0) {
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius), NO, 0.0);
+        
+        UIBezierPath *outerPath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius)];
+        [self.color setFill];
+        [outerPath fill];
+        
+        UIBezierPath *innerPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(self.headPointOuterRadius, self.headPointOuterRadius) radius:self.headPointInnerRadius startAngle:0 endAngle:2 * M_PI clockwise:YES];
+        [[UIColor whiteColor] setFill];
+        [innerPath fill];
+        
+        UIImage *headPointImage = UIGraphicsGetImageFromCurrentImageContext();
+        
+        UIGraphicsEndImageContext();
+        
+        headPointLayer = [CALayer new];
+        headPointLayer.bounds = CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius);
+        headPointLayer.position = [(NSValue *)self.points.lastObject CGPointValue];
+        headPointLayer.contents = (id)headPointImage.CGImage;
+        [self.layer addSublayer:headPointLayer];
+    }
 
     //----------------------------//
     //------ Animate Drawing -----//
@@ -271,8 +296,15 @@
         pathLayer.lineJoin = kCALineJoinBevel;
         pathLayer.lineCap = kCALineCapRound;
         if (self.animationTime > 0) [self animateForLayer:pathLayer withAnimationType:self.animationType isAnimatingReferenceLine:NO];
-        if (self.lineGradient) [self.layer addSublayer:[self backgroundGradientLayerForLayer:pathLayer]];
-        else [self.layer addSublayer:pathLayer];
+        
+        CALayer *addingPathLayer;
+        if (self.lineGradient){
+            addingPathLayer = [self backgroundGradientLayerForLayer:pathLayer];
+        } else {
+            addingPathLayer = pathLayer;
+        }
+        [self.layer addSublayer:addingPathLayer];
+        [self.layer insertSublayer:headPointLayer above:addingPathLayer];
     }
     
     if (self.animationTime > 0) {
@@ -294,6 +326,13 @@
         maskLayer.frame = self.bounds;
         
         lineAndFillLayer.mask = maskLayer;
+    }
+    
+    if (self.animationTime > 0 && self.headPointOuterRadius > 0 && self.points.count > 0) {
+        CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:@"position"];
+        animation.path = line.CGPath;
+        animation.duration = self.animationTime;
+        [headPointLayer addAnimation:animation forKey:@"position"];
     }
 
     if (self.averageLine.enableAverageLine == YES) {

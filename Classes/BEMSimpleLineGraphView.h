@@ -359,6 +359,9 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 
 @property (nonatomic) CGFloat bottomOffset;
 
+@property (nonatomic) CGFloat headPointOuterRadius;
+@property (nonatomic) CGFloat headPointInnerRadius;
+
 @end
 
 

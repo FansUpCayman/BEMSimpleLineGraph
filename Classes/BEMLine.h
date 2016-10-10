@@ -141,6 +141,8 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 
 @property (nonatomic) float bottomOffset;
 
+@property (nonatomic) float headPointOuterRadius;
+@property (nonatomic) float headPointInnerRadius;
 
 
 //----- BEZIER CURVE -----//
