@@ -111,7 +111,9 @@
         }
     }
 
-
+    // Image context starts here
+    UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0);
+    
     //----------------------------//
     //----- Draw Average Line ----//
     //----------------------------//
@@ -126,8 +128,7 @@
         [averageLinePath moveToPoint:initialPoint];
         [averageLinePath addLineToPoint:finalPoint];
     }
-
-
+    
     //----------------------------//
     //------ Draw Graph Line -----//
     //----------------------------//
@@ -170,7 +171,7 @@
 
     [self.bottomColor set];
     [fillBottom fillWithBlendMode:kCGBlendModeNormal alpha:self.bottomAlpha];
-
+    
     CGContextRef ctx = UIGraphicsGetCurrentContext();
     if (self.topGradient != nil) {
         CGContextSaveGState(ctx);
@@ -188,6 +189,15 @@
         CGContextRestoreGState(ctx);
     }
 
+    UIImage *lineAndFillImage = UIGraphicsGetImageFromCurrentImageContext();
+    
+    UIGraphicsEndImageContext();
+    // Image context ends here
+    
+    CALayer *lineAndFillLayer = [CALayer new];
+    lineAndFillLayer.contents = (id)lineAndFillImage.CGImage;
+    lineAndFillLayer.frame = self.bounds;
+    [self.layer addSublayer:lineAndFillLayer];
 
     //----------------------------//
     //------ Animate Drawing -----//
@@ -263,6 +273,27 @@
         if (self.animationTime > 0) [self animateForLayer:pathLayer withAnimationType:self.animationType isAnimatingReferenceLine:NO];
         if (self.lineGradient) [self.layer addSublayer:[self backgroundGradientLayerForLayer:pathLayer]];
         else [self.layer addSublayer:pathLayer];
+    }
+    
+    if (self.animationTime > 0) {
+        CALayer *maskLayer = [CALayer new];
+        maskLayer.backgroundColor = [UIColor whiteColor].CGColor;
+        
+        CABasicAnimation *boundsAnimation = [CABasicAnimation animationWithKeyPath:@"bounds"];
+        boundsAnimation.duration = self.animationTime;
+        boundsAnimation.fromValue = [NSValue valueWithCGRect:CGRectMake(0, 0, 0, self.bounds.size.height)];
+        boundsAnimation.toValue = [NSValue valueWithCGRect:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];
+        [maskLayer addAnimation:boundsAnimation forKey:@"bounds"];
+        
+        CABasicAnimation *positionAnimation = [CABasicAnimation animationWithKeyPath:@"position"];
+        positionAnimation.duration = self.animationTime;
+        positionAnimation.fromValue = [NSValue valueWithCGPoint:CGPointMake(0, self.bounds.size.height / 2)];
+        positionAnimation.toValue = [NSValue valueWithCGPoint:CGPointMake(self.bounds.size.width / 2, self.bounds.size.height / 2)];
+        [maskLayer addAnimation:positionAnimation forKey:@"position"];
+        
+        maskLayer.frame = self.bounds;
+        
+        lineAndFillLayer.mask = maskLayer;
     }
 
     if (self.averageLine.enableAverageLine == YES) {
