@@ -137,11 +137,13 @@
     UIBezierPath *fillTop;
     UIBezierPath *fillBottom;
 
-    CGFloat xIndexScale = self.frame.size.width/([self.arrayOfPoints count] - 1);
+    CGFloat minX = [self.arrayOfXValues[0] CGFloatValue];
+    CGFloat maxX = [self.arrayOfXValues[self.arrayOfXValues.count - 1] CGFloatValue];
 
     self.points = [NSMutableArray arrayWithCapacity:self.arrayOfPoints.count];
     for (int i = 0; i < self.arrayOfPoints.count; i++) {
-        CGPoint value = CGPointMake(xIndexScale * i, [self.arrayOfPoints[i] CGFloatValue]);
+        CGFloat x = maxX - minX != 0 ? ([self.arrayOfXValues[i] CGFloatValue] - minX) / (maxX - minX) * self.frame.size.width : 0;
+        CGPoint value = CGPointMake(x, [self.arrayOfPoints[i] CGFloatValue]);
         if (value.y != BEMNullGraphValue || !self.interpolateNullValues) {
             [self.points addObject:[NSValue valueWithCGPoint:value]];
         }
@@ -331,6 +333,25 @@
     if (self.animationTime > 0 && self.headPointOuterRadius > 0 && self.points.count > 0) {
         CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:@"position"];
         animation.path = line.CGPath;
+    
+        NSMutableArray *keyTimes = [NSMutableArray new];
+        CGFloat minX = [self.arrayOfXValues[0] CGFloatValue];
+        CGFloat maxX = [self.arrayOfXValues[self.arrayOfXValues.count - 1] CGFloatValue];
+        
+        [keyTimes addObject:@(0.0)];
+        for (int i = 0; i < self.arrayOfXValues.count - 1; ++i) {
+            if (maxX - minX == 0) {
+                [keyTimes addObject:@1];
+                [keyTimes addObject:@1];
+            } else {
+                CGFloat time0 = ([self.arrayOfXValues[i] CGFloatValue] - minX) / (maxX - minX);
+                CGFloat time1 = ([self.arrayOfXValues[i + 1] CGFloatValue] - minX) / (maxX - minX);
+                [keyTimes addObject:@((time0 + time1) / 2)];
+                [keyTimes addObject:@(time1)];
+            }
+        }
+        animation.keyTimes = keyTimes;
+        
         animation.duration = self.animationTime;
         [headPointLayer addAnimation:animation forKey:@"position"];
     }

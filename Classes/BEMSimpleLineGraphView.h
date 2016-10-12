@@ -407,6 +407,7 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
  @param index The index from left to right of a given label on the X-axis. Is the same index as the one for the points. The first value for the index is 0. */
 - (nullable NSString *)lineGraph:(nonnull BEMSimpleLineGraphView *)graph labelOnXAxisForIndex:(NSInteger)index;
 
+- (CGFloat)lineGraph:(BEMSimpleLineGraphView *)graph xValueForPointAtIndex:(NSInteger)index;
 
 @end
 

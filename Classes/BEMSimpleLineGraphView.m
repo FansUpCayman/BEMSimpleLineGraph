@@ -586,6 +586,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     line.lineAlpha = self.alphaLine;
     line.bezierCurveIsEnabled = self.enableBezierCurve;
     line.arrayOfPoints = yAxisValues;
+    line.arrayOfXValues = [self xValues];
     line.arrayOfValues = self.graphValuesForDataPoints;
     line.lineDashPatternForReferenceYAxisLines = self.lineDashPatternForReferenceYAxisLines;
     line.lineDashPatternForReferenceXAxisLines = self.lineDashPatternForReferenceXAxisLines;
@@ -1541,6 +1542,24 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
         }
         return minValue;
     }
+}
+
+- (CGFloat)xValueForPointAtIndex:(NSInteger)index {
+    if ([self.dataSource respondsToSelector:@selector(lineGraph:xValueForPointAtIndex:)]) {
+        return [self.dataSource lineGraph:self xValueForPointAtIndex:index];
+    } else {
+        return index;
+    }
+}
+
+- (NSArray *)xValues {
+    NSMutableArray *values = [NSMutableArray new];
+    
+    for (int i = 0; i < numberOfPoints; i++) {
+        [values addObject:@([self xValueForPointAtIndex:i])];
+    }
+    
+    return values;
 }
 
 - (CGFloat)yPositionForDotValue:(CGFloat)dotValue {

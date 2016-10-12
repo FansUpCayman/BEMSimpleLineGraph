@@ -57,6 +57,8 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 /// All of the point values
 @property (strong, nonatomic) NSArray *arrayOfValues;
 
+@property (strong, nonatomic) NSArray *arrayOfXValues;
+
 /** Draw thin, translucent, reference lines using the provided X-Axis and Y-Axis coordinates.
  @see Use \p arrayOfVerticalRefrenceLinePoints to specify vertical reference lines' positions. Use \p arrayOfHorizontalRefrenceLinePoints to specify horizontal reference lines' positions. */
 @property (assign, nonatomic) BOOL enableRefrenceLines;
