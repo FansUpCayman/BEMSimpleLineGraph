@@ -297,7 +297,6 @@
         pathLayer.lineWidth = self.lineWidth;
         pathLayer.lineJoin = kCALineJoinBevel;
         pathLayer.lineCap = kCALineCapRound;
-        if (self.animationTime > 0) [self animateForLayer:pathLayer withAnimationType:self.animationType isAnimatingReferenceLine:NO];
         
         CALayer *addingPathLayer;
         if (self.lineGradient){
@@ -305,8 +304,7 @@
         } else {
             addingPathLayer = pathLayer;
         }
-        [self.layer addSublayer:addingPathLayer];
-        [self.layer insertSublayer:headPointLayer above:addingPathLayer];
+        [lineAndFillLayer addSublayer:addingPathLayer];
     }
     
     if (self.animationTime > 0) {
@@ -479,12 +477,6 @@ static CGPoint controlPointForPoints(CGPoint p1, CGPoint p2) {
 
         return;
     } else {
-        CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
-        pathAnimation.duration = self.animationTime;
-        pathAnimation.fromValue = [NSNumber numberWithFloat:0.0f];
-        pathAnimation.toValue = [NSNumber numberWithFloat:1.0f];
-        [shapeLayer addAnimation:pathAnimation forKey:@"strokeEnd"];
-
         return;
     }
 }
