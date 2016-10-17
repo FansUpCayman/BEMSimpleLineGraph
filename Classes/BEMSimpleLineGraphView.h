@@ -482,6 +482,8 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
  @return The minimum value of the Y-Axis. */
 - (CGFloat)minValueForLineGraph:(BEMSimpleLineGraphView *)graph;
 
+- (CGFloat)maxXValueForLineGraph:(BEMSimpleLineGraphView *)graph;
+- (CGFloat)minXValueForLineGraph:(BEMSimpleLineGraphView *)graph;
 
 /** Optional method to control whether a label indicating NO DATA will be shown while number of data is zero
  @param graph The graph object for the NO DATA label

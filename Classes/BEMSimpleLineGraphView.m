@@ -51,6 +51,9 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     /// All of the Y-Axis Label Points
     NSMutableArray *yAxisLabelPoints;
     
+    /// All of the X-Axis values, not label values
+    NSMutableArray *xxAxisValues;
+    
     /// All of the Y-Axis Values
     NSMutableArray *yAxisValues;
     
@@ -196,6 +199,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     yAxisLabelPoints = [NSMutableArray array];
     dataPoints = [NSMutableArray array];
     xAxisLabels = [NSMutableArray array];
+    xxAxisValues = [NSMutableArray array];
     yAxisValues = [NSMutableArray array];
 
     // Initialize BEM Objects
@@ -473,6 +477,9 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     // Remove all data points before adding them to the array
     [dataPoints removeAllObjects];
     
+    //
+    [xxAxisValues removeAllObjects];
+    
     // Remove all yAxis values before adding them to the array
     [yAxisValues removeAllObjects];
     
@@ -505,11 +512,12 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 #endif
             [dataPoints addObject:@(dotValue)];
             
-            if (self.positionYAxisRight) {
-                positionOnXAxis = (((self.frame.size.width - self.YAxisLabelXOffset) / (numberOfPoints - 1)) * i);
-            } else {
-                positionOnXAxis = (((self.frame.size.width - self.YAxisLabelXOffset) / (numberOfPoints - 1)) * i) + self.YAxisLabelXOffset;
-            }
+            
+            CGFloat xDotValue = [self xValueForPointAtIndex:i];
+            
+            positionOnXAxis = [self xPositionForXDotValue:xDotValue];
+            
+            [xxAxisValues addObject:@(positionOnXAxis)];
             
             positionOnYAxis = [self yPositionForDotValue:dotValue];
             
@@ -585,9 +593,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     line.referenceLineWidth = self.widthReferenceLines?self.widthReferenceLines:(self.widthLine/2);
     line.lineAlpha = self.alphaLine;
     line.bezierCurveIsEnabled = self.enableBezierCurve;
+    line.arrayOfXValues = xxAxisValues;
     line.arrayOfPoints = yAxisValues;
-    line.arrayOfXValues = [self xValues];
-    line.arrayOfValues = self.graphValuesForDataPoints;
     line.lineDashPatternForReferenceYAxisLines = self.lineDashPatternForReferenceYAxisLines;
     line.lineDashPatternForReferenceXAxisLines = self.lineDashPatternForReferenceXAxisLines;
     line.interpolateNullValues = self.interpolateNullValues;
@@ -1552,14 +1559,34 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     }
 }
 
-- (NSArray *)xValues {
-    NSMutableArray *values = [NSMutableArray new];
-    
-    for (int i = 0; i < numberOfPoints; i++) {
-        [values addObject:@([self xValueForPointAtIndex:i])];
+- (CGFloat)xPositionForXDotValue:(CGFloat)xDotValue {
+    if (xDotValue == BEMNullGraphValue) {
+        return BEMNullGraphValue;
     }
     
-    return values;
+    CGFloat minX;
+    if ([self.delegate respondsToSelector:@selector(minXValueForLineGraph:)]) {
+        minX = [self.delegate minXValueForLineGraph:self];
+    } else {
+        minX = [self xValueForPointAtIndex:0];
+    }
+    
+    CGFloat maxX;
+    if ([self.delegate respondsToSelector:@selector(maxXValueForLineGraph:)]) {
+        maxX = [self.delegate maxXValueForLineGraph:self];
+    } else {
+        maxX = [self xValueForPointAtIndex:numberOfPoints - 1];
+    }
+    
+    CGFloat xPosition = maxX - minX != 0 ? (xDotValue - minX) / (maxX - minX) * (self.frame.size.width - self.YAxisLabelXOffset) : 0;
+    
+    if (self.positionYAxisRight) {
+        
+    } else {
+        xPosition += self.YAxisLabelXOffset;
+    }
+
+    return xPosition;
 }
 
 - (CGFloat)yPositionForDotValue:(CGFloat)dotValue {

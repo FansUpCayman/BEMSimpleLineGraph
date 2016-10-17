@@ -137,13 +137,9 @@
     UIBezierPath *fillTop;
     UIBezierPath *fillBottom;
 
-    CGFloat minX = [self.arrayOfXValues[0] CGFloatValue];
-    CGFloat maxX = [self.arrayOfXValues[self.arrayOfXValues.count - 1] CGFloatValue];
-
     self.points = [NSMutableArray arrayWithCapacity:self.arrayOfPoints.count];
     for (int i = 0; i < self.arrayOfPoints.count; i++) {
-        CGFloat x = maxX - minX != 0 ? ([self.arrayOfXValues[i] CGFloatValue] - minX) / (maxX - minX) * self.frame.size.width : 0;
-        CGPoint value = CGPointMake(x, [self.arrayOfPoints[i] CGFloatValue]);
+        CGPoint value = CGPointMake([self.arrayOfXValues[i] CGFloatValue], [self.arrayOfPoints[i] CGFloatValue]);
         if (value.y != BEMNullGraphValue || !self.interpolateNullValues) {
             [self.points addObject:[NSValue valueWithCGPoint:value]];
         }
@@ -333,10 +329,11 @@
         animation.path = line.CGPath;
     
         NSMutableArray *keyTimes = [NSMutableArray new];
-        CGFloat minX = [self.arrayOfXValues[0] CGFloatValue];
-        CGFloat maxX = [self.arrayOfXValues[self.arrayOfXValues.count - 1] CGFloatValue];
+        CGFloat minX = 0;
+        CGFloat maxX = self.bounds.size.width;
         
-        [keyTimes addObject:@(0.0)];
+        CGFloat time0 = ([self.arrayOfXValues[0] CGFloatValue] - minX) / (maxX - minX);
+        [keyTimes addObject:@(time0)];
         for (int i = 0; i < self.arrayOfXValues.count - 1; ++i) {
             if (maxX - minX == 0) {
                 [keyTimes addObject:@1];
@@ -374,8 +371,8 @@
 }
 
 - (NSArray *)topPointsArray {
-    CGPoint topPointZero = CGPointMake(0,0);
-    CGPoint topPointFull = CGPointMake(self.frame.size.width, 0);
+    CGPoint topPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], 0);
+    CGPoint topPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], 0);
     NSMutableArray *topPoints = [NSMutableArray arrayWithArray:self.points];
     [topPoints insertObject:[NSValue valueWithCGPoint:topPointZero] atIndex:0];
     [topPoints addObject:[NSValue valueWithCGPoint:topPointFull]];
@@ -383,8 +380,8 @@
 }
 
 - (NSArray *)bottomPointsArray {
-    CGPoint bottomPointZero = CGPointMake(0, self.frame.size.height);
-    CGPoint bottomPointFull = CGPointMake(self.frame.size.width, self.frame.size.height);
+    CGPoint bottomPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], self.frame.size.height);
+    CGPoint bottomPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], self.frame.size.height);
     NSMutableArray *bottomPoints;
     if (self.bottomOffset == 0) {
         bottomPoints = [NSMutableArray arrayWithArray:self.points];
