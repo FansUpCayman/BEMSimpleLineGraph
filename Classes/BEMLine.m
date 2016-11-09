@@ -10,6 +10,8 @@
 #import "BEMLine.h"
 #import "BEMSimpleLineGraphView.h"
 
+#import "UIBezierPath+Interpolation.h"
+
 #if CGFLOAT_IS_DOUBLE
 #define CGFloatValue doubleValue
 #else
@@ -150,16 +152,14 @@
     
     if (!self.disableMainLine && bezierStatus) {
         line = [BEMLine quadCurvedPathWithPoints:self.points];
-        fillBottom = [BEMLine quadCurvedPathWithPoints:self.bottomPointsArray];
-        fillTop = [BEMLine quadCurvedPathWithPoints:self.topPointsArray];
     } else if (!self.disableMainLine && !bezierStatus) {
         line = [BEMLine linesToPoints:self.points];
-        fillBottom = [BEMLine linesToPoints:self.bottomPointsArray];
-        fillTop = [BEMLine linesToPoints:self.topPointsArray];
     } else {
-        fillBottom = [BEMLine linesToPoints:self.bottomPointsArray];
-        fillTop = [BEMLine linesToPoints:self.topPointsArray];
+        // Remains empty path
     }
+    
+    fillBottom = [self bottomFillPath];
+    fillTop = [self topFillPath];
 
     //----------------------------//
     //----- Draw Fill Colors -----//
@@ -339,9 +339,7 @@
                 [keyTimes addObject:@1];
                 [keyTimes addObject:@1];
             } else {
-                CGFloat time0 = ([self.arrayOfXValues[i] CGFloatValue] - minX) / (maxX - minX);
                 CGFloat time1 = ([self.arrayOfXValues[i + 1] CGFloatValue] - minX) / (maxX - minX);
-                [keyTimes addObject:@((time0 + time1) / 2)];
                 [keyTimes addObject:@(time1)];
             }
         }
@@ -370,18 +368,24 @@
     }
 }
 
-- (NSArray *)topPointsArray {
+- (UIBezierPath *)topFillPath {
     CGPoint topPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], 0);
     CGPoint topPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], 0);
-    NSMutableArray *topPoints = [NSMutableArray arrayWithArray:self.points];
-    [topPoints insertObject:[NSValue valueWithCGPoint:topPointZero] atIndex:0];
-    [topPoints addObject:[NSValue valueWithCGPoint:topPointFull]];
-    return topPoints;
+    
+    UIBezierPath *path;
+    if (self.bezierCurveIsEnabled) {
+        path = [BEMLine quadCurvedPathWithPoints:self.points];
+    } else {
+        path = [BEMLine linesToPoints:self.points];
+    }
+    [path addLineToPoint:topPointFull];
+    [path addLineToPoint:topPointZero];
+    [path closePath];
+    
+    return path;
 }
 
-- (NSArray *)bottomPointsArray {
-    CGPoint bottomPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], self.frame.size.height);
-    CGPoint bottomPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], self.frame.size.height);
+- (UIBezierPath *)bottomFillPath {
     NSMutableArray *bottomPoints;
     if (self.bottomOffset == 0) {
         bottomPoints = [NSMutableArray arrayWithArray:self.points];
@@ -392,9 +396,21 @@
             [bottomPoints addObject:offsetPoint];
         }
     }
-    [bottomPoints insertObject:[NSValue valueWithCGPoint:bottomPointZero] atIndex:0];
-    [bottomPoints addObject:[NSValue valueWithCGPoint:bottomPointFull]];
-    return bottomPoints;
+
+    CGPoint bottomPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], self.frame.size.height);
+    CGPoint bottomPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], self.frame.size.height);
+
+    UIBezierPath *path;
+    if (self.bezierCurveIsEnabled) {
+        path = [BEMLine quadCurvedPathWithPoints:bottomPoints];
+    } else {
+        path = [BEMLine linesToPoints:bottomPoints];
+    }
+    [path addLineToPoint:bottomPointFull];
+    [path addLineToPoint:bottomPointZero];
+    [path closePath];
+    
+    return path;
 }
 
 + (UIBezierPath *)linesToPoints:(NSArray *)points {
@@ -412,46 +428,15 @@
 }
 
 + (UIBezierPath *)quadCurvedPathWithPoints:(NSArray *)points {
-    UIBezierPath *path = [UIBezierPath bezierPath];
-
-    NSValue *value = points[0];
-    CGPoint p1 = [value CGPointValue];
-    [path moveToPoint:p1];
-
-    if (points.count == 2) {
-        value = points[1];
-        CGPoint p2 = [value CGPointValue];
-        [path addLineToPoint:p2];
-        return path;
-    }
-
-    for (NSUInteger i = 1; i < points.count; i++) {
-        value = points[i];
-        CGPoint p2 = [value CGPointValue];
-
-        CGPoint midPoint = midPointForPoints(p1, p2);
-        [path addQuadCurveToPoint:midPoint controlPoint:controlPointForPoints(midPoint, p1)];
-        [path addQuadCurveToPoint:p2 controlPoint:controlPointForPoints(midPoint, p2)];
-
-        p1 = p2;
-    }
-    return path;
-}
-
-static CGPoint midPointForPoints(CGPoint p1, CGPoint p2) {
-    return CGPointMake((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-}
-
-static CGPoint controlPointForPoints(CGPoint p1, CGPoint p2) {
-    CGPoint controlPoint = midPointForPoints(p1, p2);
-    CGFloat diffY = fabs(p2.y - controlPoint.y);
-
-    if (p1.y < p2.y)
-        controlPoint.y += diffY;
-    else if (p1.y > p2.y)
-        controlPoint.y -= diffY;
-
-    return controlPoint;
+    NSMutableArray *twoMorePoints = [points mutableCopy];
+    
+    NSValue *firstPoint = points[0];
+    NSValue *lastPoint = points[points.count - 1];
+    
+    [twoMorePoints insertObject:firstPoint atIndex:0];
+    [twoMorePoints addObject:lastPoint];
+    
+    return [UIBezierPath interpolateCGPointsWithCatmullRom:twoMorePoints closed:NO alpha:0.5];
 }
 
 - (void)animateForLayer:(CAShapeLayer *)shapeLayer withAnimationType:(BEMLineAnimation)animationType isAnimatingReferenceLine:(BOOL)shouldHalfOpacity {
