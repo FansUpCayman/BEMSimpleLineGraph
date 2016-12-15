@@ -1059,8 +1059,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 - (CGRect)drawableGraphArea {
 //  CGRectMake(xAxisXPositionFirstOffset, self.frame.size.height-20, viewWidth/2, 20);
     NSInteger xAxisHeight = 0;
-    CGFloat xOrigin = self.positionYAxisRight ? 0 : self.YAxisLabelXOffset;
-    CGFloat viewWidth = self.frame.size.width - self.YAxisLabelXOffset;
+    CGFloat xOrigin = self.positionYAxisRight ? 0 : self.YAxisLabelXOffset + 4;
+    CGFloat viewWidth = self.frame.size.width - self.YAxisLabelXOffset - 4;
     CGFloat adjustedHeight = self.bounds.size.height - xAxisHeight;
     
     CGRect rect = CGRectMake(xOrigin, 0, viewWidth, adjustedHeight);
