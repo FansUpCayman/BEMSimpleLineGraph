@@ -415,6 +415,71 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     });
 }
 
+- (NSString *)textForYAxisValue:(CGFloat)value {
+    if ([self.delegate respondsToSelector:@selector(yAxisTextOnLineGraph:value:)]) {
+        return [self.delegate yAxisTextOnLineGraph:self value:value];
+    } else {
+        NSString *formattedValue = [NSString stringWithFormat:self.formatStringForValues, value];
+        
+        NSString *yAxisPrefix = @"";
+        NSString *yAxisSuffix = @"";
+        
+        if ([self.delegate respondsToSelector:@selector(yAxisPrefixOnLineGraph:)]) {
+            yAxisPrefix = [self.delegate yAxisPrefixOnLineGraph:self];
+        }
+        
+        if ([self.delegate respondsToSelector:@selector(yAxisSuffixOnLineGraph:)]) {
+            yAxisSuffix = [self.delegate yAxisSuffixOnLineGraph:self];
+        }
+        
+        return [NSString stringWithFormat:@"%@%@%@", yAxisPrefix, formattedValue, yAxisSuffix];
+    }
+}
+
+// Returns nil if some error occurs
+- (NSArray *)yDotValues {
+    // Plot according to min-max range
+    NSNumber *minimumValue;
+    NSNumber *maximumValue;
+    
+    minimumValue = [self calculateMinimumPointValue];
+    maximumValue = [self calculateMaximumPointValue];
+    
+    CGFloat numberOfLabels;
+    if ([self.delegate respondsToSelector:@selector(numberOfYAxisLabelsOnLineGraph:)]) {
+        numberOfLabels = [self.delegate numberOfYAxisLabelsOnLineGraph:self];
+    } else numberOfLabels = 3;
+    
+    NSMutableArray *dotValues = [[NSMutableArray alloc] initWithCapacity:numberOfLabels];
+    if ([self.delegate respondsToSelector:@selector(baseValueForYAxisOnLineGraph:)] && [self.delegate respondsToSelector:@selector(incrementValueForYAxisOnLineGraph:)]) {
+        CGFloat baseValue = [self.delegate baseValueForYAxisOnLineGraph:self];
+        CGFloat increment = [self.delegate incrementValueForYAxisOnLineGraph:self];
+        
+        float yAxisPosition = baseValue;
+        if (baseValue + increment * 100 < maximumValue.doubleValue) {
+            NSLog(@"[BEMSimpleLineGraph] Increment does not properly lay out Y axis, bailing early");
+            return nil;
+        }
+        
+        while(yAxisPosition < maximumValue.floatValue + increment) {
+            [dotValues addObject:@(yAxisPosition)];
+            yAxisPosition += increment;
+        }
+    } else if (numberOfLabels <= 0) return nil;
+    else if (numberOfLabels == 1) {
+        [dotValues removeAllObjects];
+        [dotValues addObject:[NSNumber numberWithInt:(minimumValue.intValue + maximumValue.intValue)/2]];
+    } else {
+        [dotValues addObject:minimumValue];
+        [dotValues addObject:maximumValue];
+        for (int i=1; i<numberOfLabels-1; i++) {
+            [dotValues addObject:[NSNumber numberWithFloat:(minimumValue.doubleValue + ((maximumValue.doubleValue - minimumValue.doubleValue)/(numberOfLabels-1))*i)]];
+        }
+    }
+    
+    return dotValues;
+}
+
 - (void)drawEntireGraph {
     // The following method calls are in this specific order for a reason
     // Changing the order of the method calls below can result in drawing glitches and even crashes
@@ -422,32 +487,26 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     self.maxValue = [self getMaximumValue];
     self.minValue = [self getMinimumValue];
     
+    
+    // Draw the graph
+    [self drawDots];
+    
     // Set the Y-Axis Offset if the Y-Axis is enabled. The offset is relative to the size of the longest label on the Y-Axis.
     if (self.enableYAxisLabel) {
         NSDictionary *attributes = @{NSFontAttributeName: self.labelFont};
         if (self.autoScaleYAxis == YES){
-            NSString *maxValueString = [NSString stringWithFormat:self.formatStringForValues, self.maxValue];
-            NSString *minValueString = [NSString stringWithFormat:self.formatStringForValues, self.minValue];
-            
-            NSString *longestString = @"";
-            if (maxValueString.length > minValueString.length) longestString = maxValueString;
-            else longestString = minValueString;
-            
-            NSString *prefix = @"";
-            NSString *suffix = @"";
-            
-            if ([self.delegate respondsToSelector:@selector(yAxisPrefixOnLineGraph:)]) {
-                prefix = [self.delegate yAxisPrefixOnLineGraph:self];
+            CGFloat maxWidth = 0;
+            NSArray *dotValues = [self yDotValues];
+            if (dotValues != nil) {
+                for (NSNumber *dotValue in dotValues) {
+                    NSString *text = [self textForYAxisValue:(CGFloat)dotValue.doubleValue];
+                    CGFloat width = [text sizeWithAttributes:attributes].width;
+                    maxWidth = MAX(width, maxWidth);
+                }
             }
+            maxWidth = ceil(maxWidth);
             
-            if ([self.delegate respondsToSelector:@selector(yAxisSuffixOnLineGraph:)]) {
-                suffix = [self.delegate yAxisSuffixOnLineGraph:self];
-            }
-            
-            NSString *mString = [longestString stringByReplacingOccurrencesOfString:@"[0-9-]" withString:@"N" options:NSRegularExpressionSearch range:NSMakeRange(0, [longestString length])];
-            NSString *fullString = [NSString stringWithFormat:@"%@%@%@", prefix, mString, suffix];
-            self.YAxisLabelXOffset = [fullString sizeWithAttributes:attributes].width + 2;//MAX([maxValueString sizeWithAttributes:attributes].width + 10,
-                                     //    [minValueString sizeWithAttributes:attributes].width) + 5;
+            self.YAxisLabelXOffset = maxWidth + 5;
         } else {
             NSString *longestString = [NSString stringWithFormat:@"%i", (int)self.frame.size.height];
             self.YAxisLabelXOffset = [longestString sizeWithAttributes:attributes].width + 5;
@@ -457,8 +516,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     // Draw the X-Axis
     [self drawXAxis];
 
-    // Draw the graph
-    [self drawDots];
+    
 
     // Draw the Y-Axis
     if (self.enableYAxisLabel) [self drawYAxis];
@@ -932,57 +990,16 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     NSMutableArray *yAxisLabels = [NSMutableArray arrayWithCapacity:0];
     [yAxisLabelPoints removeAllObjects];
     
-    NSString *yAxisSuffix = @"";
-    NSString *yAxisPrefix = @"";
-    
-    if ([self.delegate respondsToSelector:@selector(yAxisPrefixOnLineGraph:)]) yAxisPrefix = [self.delegate yAxisPrefixOnLineGraph:self];
-    if ([self.delegate respondsToSelector:@selector(yAxisSuffixOnLineGraph:)]) yAxisSuffix = [self.delegate yAxisSuffixOnLineGraph:self];
-    
     if (self.autoScaleYAxis) {
-        // Plot according to min-max range
-        NSNumber *minimumValue;
-        NSNumber *maximumValue;
-
-        minimumValue = [self calculateMinimumPointValue];
-        maximumValue = [self calculateMaximumPointValue];
-        
-        CGFloat numberOfLabels;
-        if ([self.delegate respondsToSelector:@selector(numberOfYAxisLabelsOnLineGraph:)]) {
-            numberOfLabels = [self.delegate numberOfYAxisLabelsOnLineGraph:self];
-        } else numberOfLabels = 3;
-        
-        NSMutableArray *dotValues = [[NSMutableArray alloc] initWithCapacity:numberOfLabels];
-        if ([self.delegate respondsToSelector:@selector(baseValueForYAxisOnLineGraph:)] && [self.delegate respondsToSelector:@selector(incrementValueForYAxisOnLineGraph:)]) {
-            CGFloat baseValue = [self.delegate baseValueForYAxisOnLineGraph:self];
-            CGFloat increment = [self.delegate incrementValueForYAxisOnLineGraph:self];
-            
-            float yAxisPosition = baseValue;
-            if (baseValue + increment * 100 < maximumValue.doubleValue) {
-                NSLog(@"[BEMSimpleLineGraph] Increment does not properly lay out Y axis, bailing early");
-                return;
-            }
-            
-            while(yAxisPosition < maximumValue.floatValue + increment) {
-                [dotValues addObject:@(yAxisPosition)];
-                yAxisPosition += increment;
-            }
-        } else if (numberOfLabels <= 0) return;
-        else if (numberOfLabels == 1) {
-            [dotValues removeAllObjects];
-            [dotValues addObject:[NSNumber numberWithInt:(minimumValue.intValue + maximumValue.intValue)/2]];
-        } else {
-            [dotValues addObject:minimumValue];
-            [dotValues addObject:maximumValue];
-            for (int i=1; i<numberOfLabels-1; i++) {
-                [dotValues addObject:[NSNumber numberWithFloat:(minimumValue.doubleValue + ((maximumValue.doubleValue - minimumValue.doubleValue)/(numberOfLabels-1))*i)]];
-            }
+        NSArray *dotValues = [self yDotValues];
+        if (dotValues == nil) {
+            return;
         }
         
         for (NSNumber *dotValue in dotValues) {
             CGFloat yAxisPosition = [self yPositionForDotValue:dotValue.floatValue];
             UILabel *labelYAxis = [[UILabel alloc] initWithFrame:frameForLabelYAxis];
-            NSString *formattedValue = [NSString stringWithFormat:self.formatStringForValues, dotValue.doubleValue];
-            labelYAxis.text = [NSString stringWithFormat:@"%@%@%@", yAxisPrefix, formattedValue, yAxisSuffix];
+            labelYAxis.text = [self textForYAxisValue:(CGFloat)dotValue.doubleValue];
             labelYAxis.textAlignment = textAlignmentForLabelYAxis;
             labelYAxis.font = self.labelFont;
             labelYAxis.textColor = self.colorYaxisLabel;

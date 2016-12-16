@@ -587,6 +587,7 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
  @return The suffix to prepend to append to the y axis. */
 - (NSString *)yAxisSuffixOnLineGraph:(BEMSimpleLineGraphView *)graph;
 
+- (NSString *)yAxisTextOnLineGraph:(BEMSimpleLineGraphView *)graph value:(CGFloat)value;
 
 /** Starting value to begin drawing Y-Axis labels  MUST ALSO IMPLEMENT incrementValueForYAxisOnLineGraph FOR THIS TO TAKE EFFECT
  @discussion This allows you to finally hone the granularity of the data label.  Instead of drawing values like 11.24, 
