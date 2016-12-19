@@ -481,56 +481,21 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 }
 
 - (void)drawEntireGraph {
-    // The following method calls are in this specific order for a reason
-    // Changing the order of the method calls below can result in drawing glitches and even crashes
-    
-    self.maxValue = [self getMaximumValue];
-    self.minValue = [self getMinimumValue];
-    
+    [self updateData];
     
     // Draw the graph
     [self drawDots];
-    
-    // Set the Y-Axis Offset if the Y-Axis is enabled. The offset is relative to the size of the longest label on the Y-Axis.
-    if (self.enableYAxisLabel) {
-        NSDictionary *attributes = @{NSFontAttributeName: self.labelFont};
-        if (self.autoScaleYAxis == YES){
-            CGFloat maxWidth = 0;
-            NSArray *dotValues = [self yDotValues];
-            if (dotValues != nil) {
-                for (NSNumber *dotValue in dotValues) {
-                    NSString *text = [self textForYAxisValue:(CGFloat)dotValue.doubleValue];
-                    CGFloat width = [text sizeWithAttributes:attributes].width;
-                    maxWidth = MAX(width, maxWidth);
-                }
-            }
-            maxWidth = ceil(maxWidth);
-            
-            self.YAxisLabelXOffset = maxWidth + 5;
-        } else {
-            NSString *longestString = [NSString stringWithFormat:@"%i", (int)self.frame.size.height];
-            self.YAxisLabelXOffset = [longestString sizeWithAttributes:attributes].width + 5;
-        }
-    } else self.YAxisLabelXOffset = 0;
 
     // Draw the X-Axis
     [self drawXAxis];
-
-    
 
     // Draw the Y-Axis
     if (self.enableYAxisLabel) [self drawYAxis];
 }
 
-- (void)drawDots {
-    CGFloat positionOnXAxis; // The position on the X-axis of the point currently being created.
-    CGFloat positionOnYAxis; // The position on the Y-axis of the point currently being created.
-    
-    // Remove all dots that were previously on the graph
-    for (UIView *subview in [self subviews]) {
-        if ([subview isKindOfClass:[BEMCircle class]] || [subview isKindOfClass:[BEMPermanentPopupView class]] || [subview isKindOfClass:[BEMPermanentPopupLabel class]])
-            [subview removeFromSuperview];
-    }
+- (void)updateData {
+    self.maxValue = [self getMaximumValue];
+    self.minValue = [self getMinimumValue];
     
     // Remove all data points before adding them to the array
     [dataPoints removeAllObjects];
@@ -569,18 +534,64 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
             dotValue = (int)(arc4random() % 10000);
 #endif
             [dataPoints addObject:@(dotValue)];
-            
+        }
+        
+        // Set the Y-Axis Offset if the Y-Axis is enabled. The offset is relative to the size of the longest label on the Y-Axis.
+        if (self.enableYAxisLabel) {
+            NSDictionary *attributes = @{NSFontAttributeName: self.labelFont};
+            if (self.autoScaleYAxis == YES){
+                CGFloat maxWidth = 0;
+                NSArray *dotValues = [self yDotValues];
+                if (dotValues != nil) {
+                    for (NSNumber *dotValue in dotValues) {
+                        NSString *text = [self textForYAxisValue:(CGFloat)dotValue.doubleValue];
+                        CGFloat width = [text sizeWithAttributes:attributes].width;
+                        maxWidth = MAX(width, maxWidth);
+                    }
+                }
+                maxWidth = ceil(maxWidth);
+                
+                self.YAxisLabelXOffset = maxWidth + 5;
+            } else {
+                NSString *longestString = [NSString stringWithFormat:@"%i", (int)self.frame.size.height];
+                self.YAxisLabelXOffset = [longestString sizeWithAttributes:attributes].width + 5;
+            }
+        } else {
+            self.YAxisLabelXOffset = 0;
+        }
+        
+        for (int i = 0; i< numberOfPoints; i++) {
+            CGFloat dotValue = [dataPoints[i] doubleValue];
             
             CGFloat xDotValue = [self xValueForPointAtIndex:i];
             
-            positionOnXAxis = [self xPositionForXDotValue:xDotValue];
+            CGFloat positionOnXAxis = [self xPositionForXDotValue:xDotValue]; // Note, this depend on YAxisLabelXOffset, must calculate YAxisLabelXOffset first.
             
             [xxAxisValues addObject:@(positionOnXAxis)];
             
-            positionOnYAxis = [self yPositionForDotValue:dotValue];
+            CGFloat positionOnYAxis = [self yPositionForDotValue:dotValue];
             
             [yAxisValues addObject:@(positionOnYAxis)];
-            
+        }
+    }
+}
+
+- (void)drawDots {
+    
+    // Remove all dots that were previously on the graph
+    for (UIView *subview in [self subviews]) {
+        if ([subview isKindOfClass:[BEMCircle class]] || [subview isKindOfClass:[BEMPermanentPopupView class]] || [subview isKindOfClass:[BEMPermanentPopupLabel class]])
+            [subview removeFromSuperview];
+    }
+    
+    
+    
+    // Loop through each point and add it to the graph
+    @autoreleasepool {
+        for (int i = 0; i < numberOfPoints; i++) {
+            CGFloat dotValue = [dataPoints[i] doubleValue];
+            CGFloat positionOnXAxis = [xxAxisValues[i] doubleValue];
+            CGFloat positionOnYAxis = [yAxisValues[i] doubleValue];
             
             // If we're dealing with an null value, don't draw the dot
             
