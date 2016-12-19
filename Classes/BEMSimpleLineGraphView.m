@@ -1596,12 +1596,6 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     }
     
     CGFloat xPosition = maxX - minX != 0 ? (xDotValue - minX) / (maxX - minX) * (self.frame.size.width - self.YAxisLabelXOffset) : 0;
-    
-    if (self.positionYAxisRight) {
-        
-    } else {
-        xPosition += self.YAxisLabelXOffset;
-    }
 
     return xPosition;
 }
