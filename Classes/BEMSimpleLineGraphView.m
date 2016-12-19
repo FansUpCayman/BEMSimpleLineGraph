@@ -1595,7 +1595,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
         maxX = [self xValueForPointAtIndex:numberOfPoints - 1];
     }
     
-    CGFloat xPosition = maxX - minX != 0 ? (xDotValue - minX) / (maxX - minX) * (self.frame.size.width - self.YAxisLabelXOffset) : 0;
+    CGFloat xPosition = maxX - minX != 0 ? (xDotValue - minX) / (maxX - minX) * [self drawableGraphArea].size.width : 0;
 
     return xPosition;
 }
