@@ -121,6 +121,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 // Stores the background X Axis view
 @property (nonatomic) UIView *backgroundXAxis;
 
+@property (strong, nonatomic) NSMutableArray <UIView *> *permanentPopups;
+
 @end
 
 @implementation BEMSimpleLineGraphView
@@ -204,6 +206,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 
     // Initialize BEM Objects
     _averageLine = [[BEMAverageLine alloc] init];
+    
+    _permanentPopups = [NSMutableArray array];
 }
 
 - (void)prepareForInterfaceBuilder {
@@ -579,6 +583,11 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 - (void)drawDots {
     
     // Remove all dots that were previously on the graph
+    for (UIView *subview in self.permanentPopups) {
+        [subview removeFromSuperview];
+    }
+    [self.permanentPopups removeAllObjects];
+    
     for (UIView *subview in [self subviews]) {
         if ([subview isKindOfClass:[BEMCircle class]] || [subview isKindOfClass:[BEMPermanentPopupView class]] || [subview isKindOfClass:[BEMPermanentPopupLabel class]])
             [subview removeFromSuperview];
@@ -1124,69 +1133,102 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     self.enablePopUpReport = NO;
     self.xCenterLabel = circleDot.center.x;
     
-    BEMPermanentPopupLabel *permanentPopUpLabel = [[BEMPermanentPopupLabel alloc] init];
-    permanentPopUpLabel.textAlignment = NSTextAlignmentCenter;
-    permanentPopUpLabel.numberOfLines = 0;
     
-    NSString *prefix = @"";
-    NSString *suffix = @"";
-    
-    if ([self.delegate respondsToSelector:@selector(popUpSuffixForlineGraph:)])
-        suffix = [self.delegate popUpSuffixForlineGraph:self];
-
-    if ([self.delegate respondsToSelector:@selector(popUpPrefixForlineGraph:)])
-        prefix = [self.delegate popUpPrefixForlineGraph:self];
-
-    int index = (int)(circleDot.tag - DotFirstTag100);
-    NSNumber *value = dataPoints[index]; // @((NSInteger) circleDot.absoluteValue)
-    NSString *formattedValue = [NSString stringWithFormat:self.formatStringForValues, value.doubleValue];
-    permanentPopUpLabel.text = [NSString stringWithFormat:@"%@%@%@", prefix, formattedValue, suffix];
-    
-    permanentPopUpLabel.font = self.labelFont;
-    permanentPopUpLabel.backgroundColor = [UIColor clearColor];
-    [permanentPopUpLabel sizeToFit];
-    permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
-    permanentPopUpLabel.alpha = 0;
-    
-    BEMPermanentPopupView *permanentPopUpView = [[BEMPermanentPopupView alloc] initWithFrame:CGRectMake(0, 0, permanentPopUpLabel.frame.size.width + 7, permanentPopUpLabel.frame.size.height + 2)];
-    permanentPopUpView.backgroundColor = self.colorBackgroundPopUplabel;
-    permanentPopUpView.alpha = 0;
-    permanentPopUpView.layer.cornerRadius = 3;
-    permanentPopUpView.tag = PermanentPopUpViewTag3100;
-    permanentPopUpView.center = permanentPopUpLabel.center;
-    
-    if (permanentPopUpLabel.frame.origin.x <= 0) {
-        self.xCenterLabel = permanentPopUpLabel.frame.size.width/2 + 4;
-        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
-    } else if (self.enableYAxisLabel == YES && permanentPopUpLabel.frame.origin.x <= self.YAxisLabelXOffset) {
-        self.xCenterLabel = permanentPopUpLabel.frame.size.width/2 + 4;
-        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel + self.YAxisLabelXOffset, circleDot.center.y - circleDot.frame.size.height/2 - 15);
-    } else if ((permanentPopUpLabel.frame.origin.x + permanentPopUpLabel.frame.size.width) >= self.frame.size.width) {
-        self.xCenterLabel = self.frame.size.width - permanentPopUpLabel.frame.size.width/2 - 4;
-        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
-    }
-    
-    if (permanentPopUpLabel.frame.origin.y <= 2) {
-        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y + circleDot.frame.size.height/2 + 15);
-    }
-    
-    if ([self checkOverlapsForView:permanentPopUpView] == YES) {
-        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y + circleDot.frame.size.height/2 + 15);
-    }
-    
-    permanentPopUpView.center = permanentPopUpLabel.center;
-    
-    [self addSubview:permanentPopUpView];
-    [self addSubview:permanentPopUpLabel];
-    
-    if (self.animationGraphEntranceTime == 0) {
-        permanentPopUpLabel.alpha = 1;
-        permanentPopUpView.alpha = 0.7;
+    if ([self.delegate respondsToSelector:@selector(alwaysPopUpViewForLineGraph:atIndex:)]) {
+        NSInteger index = (NSInteger)(circleDot.tag - DotFirstTag100);
+        UIView *popUpView = [self.delegate alwaysPopUpViewForLineGraph:self atIndex:index];
+        CGPoint dotCenter = circleDot.center;
+        
+        CGRect popUpViewFrame;
+        if ([self.delegate respondsToSelector:@selector(frameOfAlwaysPopUpView:lineGraph:atIndex:pointCenter:graphArea:)]) {
+            popUpViewFrame = [self.delegate frameOfAlwaysPopUpView:popUpView lineGraph:self atIndex:index pointCenter:dotCenter graphArea:[self drawableGraphArea]];
+        } else {
+            CGRect bounds = popUpView.bounds;
+            CGPoint offset = [self drawableGraphArea].origin;
+            popUpViewFrame = CGRectMake(dotCenter.x + offset.x - bounds.size.width / 2, dotCenter.y + offset.y - bounds.size.height / 2, bounds.size.width, bounds.size.height);
+        }
+        
+        [self addSubview:popUpView];
+        [self.permanentPopups addObject:popUpView];
+        
+        CGPoint offset = [self drawableGraphArea].origin;
+        popUpView.frame = popUpViewFrame;
+        
+        popUpView.alpha = 0;
+        if (self.animationGraphEntranceTime == 0) {
+            popUpView.alpha = 1;
+        } else {
+            [UIView animateWithDuration:0.3 delay:self.animationGraphEntranceTime options:UIViewAnimationOptionCurveLinear animations:^{
+                popUpView.alpha = 1;
+            } completion:nil];
+        }
     } else {
-        [UIView animateWithDuration:0.5 delay:self.animationGraphEntranceTime options:UIViewAnimationOptionCurveLinear animations:^{
+        BEMPermanentPopupLabel *permanentPopUpLabel = [[BEMPermanentPopupLabel alloc] init];
+        permanentPopUpLabel.textAlignment = NSTextAlignmentCenter;
+        permanentPopUpLabel.numberOfLines = 0;
+        
+        NSString *prefix = @"";
+        NSString *suffix = @"";
+        
+        if ([self.delegate respondsToSelector:@selector(popUpSuffixForlineGraph:)])
+            suffix = [self.delegate popUpSuffixForlineGraph:self];
+
+        if ([self.delegate respondsToSelector:@selector(popUpPrefixForlineGraph:)])
+            prefix = [self.delegate popUpPrefixForlineGraph:self];
+
+        int index = (int)(circleDot.tag - DotFirstTag100);
+        NSNumber *value = dataPoints[index]; // @((NSInteger) circleDot.absoluteValue)
+        NSString *formattedValue = [NSString stringWithFormat:self.formatStringForValues, value.doubleValue];
+        permanentPopUpLabel.text = [NSString stringWithFormat:@"%@%@%@", prefix, formattedValue, suffix];
+        
+        permanentPopUpLabel.font = self.labelFont;
+        permanentPopUpLabel.backgroundColor = [UIColor clearColor];
+        [permanentPopUpLabel sizeToFit];
+        permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
+        permanentPopUpLabel.alpha = 0;
+        
+        BEMPermanentPopupView *permanentPopUpView = [[BEMPermanentPopupView alloc] initWithFrame:CGRectMake(0, 0, permanentPopUpLabel.frame.size.width + 7, permanentPopUpLabel.frame.size.height + 2)];
+        permanentPopUpView.backgroundColor = self.colorBackgroundPopUplabel;
+        permanentPopUpView.alpha = 0;
+        permanentPopUpView.layer.cornerRadius = 3;
+        permanentPopUpView.tag = PermanentPopUpViewTag3100;
+        permanentPopUpView.center = permanentPopUpLabel.center;
+        
+        if (permanentPopUpLabel.frame.origin.x <= 0) {
+            self.xCenterLabel = permanentPopUpLabel.frame.size.width/2 + 4;
+            permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
+        } else if (self.enableYAxisLabel == YES && permanentPopUpLabel.frame.origin.x <= self.YAxisLabelXOffset) {
+            self.xCenterLabel = permanentPopUpLabel.frame.size.width/2 + 4;
+            permanentPopUpLabel.center = CGPointMake(self.xCenterLabel + self.YAxisLabelXOffset, circleDot.center.y - circleDot.frame.size.height/2 - 15);
+        } else if ((permanentPopUpLabel.frame.origin.x + permanentPopUpLabel.frame.size.width) >= self.frame.size.width) {
+            self.xCenterLabel = self.frame.size.width - permanentPopUpLabel.frame.size.width/2 - 4;
+            permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y - circleDot.frame.size.height/2 - 15);
+        }
+        
+        if (permanentPopUpLabel.frame.origin.y <= 2) {
+            permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y + circleDot.frame.size.height/2 + 15);
+        }
+        
+        if ([self checkOverlapsForView:permanentPopUpView] == YES) {
+            permanentPopUpLabel.center = CGPointMake(self.xCenterLabel, circleDot.center.y + circleDot.frame.size.height/2 + 15);
+        }
+        
+        permanentPopUpView.center = permanentPopUpLabel.center;
+        
+        [self addSubview:permanentPopUpView];
+        [self addSubview:permanentPopUpLabel];
+        [self.permanentPopups addObject:permanentPopUpView];
+        [self.permanentPopups addObject:permanentPopUpLabel];
+        
+        if (self.animationGraphEntranceTime == 0) {
             permanentPopUpLabel.alpha = 1;
             permanentPopUpView.alpha = 0.7;
-        } completion:nil];
+        } else {
+            [UIView animateWithDuration:0.5 delay:self.animationGraphEntranceTime options:UIViewAnimationOptionCurveLinear animations:^{
+                permanentPopUpLabel.alpha = 1;
+                permanentPopUpView.alpha = 0.7;
+            } completion:nil];
+        }
     }
 }
 
