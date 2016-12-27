@@ -597,10 +597,11 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     
     // Loop through each point and add it to the graph
     @autoreleasepool {
+        CGPoint pointOffset = [self drawableGraphArea].origin;
         for (int i = 0; i < numberOfPoints; i++) {
             CGFloat dotValue = [dataPoints[i] doubleValue];
-            CGFloat positionOnXAxis = [xxAxisValues[i] doubleValue];
-            CGFloat positionOnYAxis = [yAxisValues[i] doubleValue];
+            CGFloat positionOnXAxis = [xxAxisValues[i] doubleValue] + pointOffset.x;
+            CGFloat positionOnYAxis = [yAxisValues[i] doubleValue] + pointOffset.y;
             
             // If we're dealing with an null value, don't draw the dot
             
@@ -1144,14 +1145,12 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
             popUpViewFrame = [self.delegate frameOfAlwaysPopUpView:popUpView lineGraph:self atIndex:index pointCenter:dotCenter graphArea:[self drawableGraphArea]];
         } else {
             CGRect bounds = popUpView.bounds;
-            CGPoint offset = [self drawableGraphArea].origin;
-            popUpViewFrame = CGRectMake(dotCenter.x + offset.x - bounds.size.width / 2, dotCenter.y + offset.y - bounds.size.height / 2, bounds.size.width, bounds.size.height);
+            popUpViewFrame = CGRectMake(dotCenter.x - bounds.size.width / 2, dotCenter.y - bounds.size.height / 2, bounds.size.width, bounds.size.height);
         }
         
         [self addSubview:popUpView];
         [self.permanentPopups addObject:popUpView];
         
-        CGPoint offset = [self drawableGraphArea].origin;
         popUpView.frame = popUpViewFrame;
         
         popUpView.alpha = 0;
