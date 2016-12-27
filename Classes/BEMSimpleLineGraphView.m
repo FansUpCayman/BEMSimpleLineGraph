@@ -1153,12 +1153,17 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
         
         popUpView.frame = popUpViewFrame;
         
-        popUpView.alpha = 0;
         if (self.animationGraphEntranceTime == 0) {
-            popUpView.alpha = 1;
+            
         } else {
-            [UIView animateWithDuration:0.3 delay:self.animationGraphEntranceTime options:UIViewAnimationOptionCurveLinear animations:^{
-                popUpView.alpha = 1;
+            popUpView.center = dotCenter;
+            popUpView.transform = CGAffineTransformMakeScale(0.0001, 0.0001);
+            
+            double duration = 0.3;
+            
+            [UIView animateWithDuration:duration delay:self.animationGraphEntranceTime usingSpringWithDamping:0.7 initialSpringVelocity: 2.0 / duration options:0 animations:^{
+                popUpView.transform = CGAffineTransformIdentity;
+                popUpView.frame = popUpViewFrame;
             } completion:nil];
         }
     } else {
