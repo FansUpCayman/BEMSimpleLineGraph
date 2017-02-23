@@ -356,8 +356,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
                 self.popUpView.alpha = 0;
                 [self addSubview:self.popUpView];
             } else {
-                NSString *maxValueString = [NSString stringWithFormat:self.formatStringForValues, [self calculateMaximumPointValue].doubleValue];
-                NSString *minValueString = [NSString stringWithFormat:self.formatStringForValues, [self calculateMinimumPointValue].doubleValue];
+                NSString *maxValueString = [NSString stringWithFormat:self.formatStringForValues, [self getMaximumValue]];
+                NSString *minValueString = [NSString stringWithFormat:self.formatStringForValues, [self getMinimumValue]];
                 
                 NSString *longestString = @"";
                 if (maxValueString.length > minValueString.length) {
@@ -446,8 +446,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     NSNumber *minimumValue;
     NSNumber *maximumValue;
     
-    minimumValue = [self calculateMinimumPointValue];
-    maximumValue = [self calculateMaximumPointValue];
+    minimumValue = @([self getMinimumValue]);
+    maximumValue = @([self getMaximumValue]);
     
     CGFloat numberOfLabels;
     if ([self.delegate respondsToSelector:@selector(numberOfYAxisLabelsOnLineGraph:)]) {
@@ -1335,26 +1335,6 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     
     return value;
 }
-
-- (NSNumber *)calculateMinimumPointValue {
-    NSArray *filteredArray = [self calculationDataPoints];
-    if (filteredArray.count == 0) return 0;
-    
-    NSExpression *expression = [NSExpression expressionForFunction:@"min:" arguments:@[[NSExpression expressionForConstantValue:filteredArray]]];
-    NSNumber *value = [expression expressionValueWithObject:nil context:nil];
-    return value;
-}
-
-- (NSNumber *)calculateMaximumPointValue {
-    NSArray *filteredArray = [self calculationDataPoints];
-    if (filteredArray.count == 0) return 0;
-    
-    NSExpression *expression = [NSExpression expressionForFunction:@"max:" arguments:@[[NSExpression expressionForConstantValue:filteredArray]]];
-    NSNumber *value = [expression expressionValueWithObject:nil context:nil];
-    
-    return value;
-}
-
 
 #pragma mark - Values
 
