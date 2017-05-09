@@ -219,6 +219,12 @@
         headPointLayer.bounds = CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius);
         headPointLayer.position = [(NSValue *)self.points.lastObject CGPointValue];
         headPointLayer.contents = (id)headPointImage.CGImage;
+        
+        headPointLayer.shadowColor = self.color.CGColor;
+        headPointLayer.shadowOffset = CGSizeMake(0, 3);
+        headPointLayer.shadowRadius = 4;
+        headPointLayer.shadowOpacity = 0.5;
+        
         [self.layer addSublayer:headPointLayer];
     }
 
