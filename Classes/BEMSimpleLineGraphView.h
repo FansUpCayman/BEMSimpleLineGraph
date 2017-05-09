@@ -473,9 +473,7 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 - (BOOL)lineGraph:(BEMSimpleLineGraphView *)graph alwaysDisplayPopUpAtIndex:(CGFloat)index;
 
 
-- (UIView *)alwaysPopUpViewForLineGraph:(BEMSimpleLineGraphView *)graph atIndex:(NSInteger)index;
-
-- (CGRect)frameOfAlwaysPopUpView:(UIView *)popUpView lineGraph:(BEMSimpleLineGraphView *)graph atIndex:(NSInteger)index pointCenter:(CGPoint)pointCenter graphArea:(CGRect)graphArea;
+- (UIView *)alwaysPopUpViewForLineGraph:(BEMSimpleLineGraphView *)graph atIndex:(NSInteger)index pointCenter:(CGPoint)pointCenter graphArea:(CGRect)graphArea;
 
 /** Optional method to set the maximum value of the Y-Axis. If not implemented, the maximum value will be the biggest point of the graph.
  @param graph The graph object requesting the maximum value.

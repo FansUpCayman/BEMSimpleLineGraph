@@ -1135,23 +1135,16 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     self.xCenterLabel = circleDot.center.x;
     
     
-    if ([self.delegate respondsToSelector:@selector(alwaysPopUpViewForLineGraph:atIndex:)]) {
+    if ([self.delegate respondsToSelector:@selector(alwaysPopUpViewForLineGraph:atIndex:pointCenter:graphArea:)]) {
         NSInteger index = (NSInteger)(circleDot.tag - DotFirstTag100);
-        UIView *popUpView = [self.delegate alwaysPopUpViewForLineGraph:self atIndex:index];
         CGPoint dotCenter = circleDot.center;
         
-        CGRect popUpViewFrame;
-        if ([self.delegate respondsToSelector:@selector(frameOfAlwaysPopUpView:lineGraph:atIndex:pointCenter:graphArea:)]) {
-            popUpViewFrame = [self.delegate frameOfAlwaysPopUpView:popUpView lineGraph:self atIndex:index pointCenter:dotCenter graphArea:[self drawableGraphArea]];
-        } else {
-            CGRect bounds = popUpView.bounds;
-            popUpViewFrame = CGRectMake(dotCenter.x - bounds.size.width / 2, dotCenter.y - bounds.size.height / 2, bounds.size.width, bounds.size.height);
-        }
+        UIView *popUpView = [self.delegate alwaysPopUpViewForLineGraph:self atIndex:index pointCenter:dotCenter graphArea:[self drawableGraphArea]];
         
         [self addSubview:popUpView];
         [self.permanentPopups addObject:popUpView];
         
-        popUpView.frame = popUpViewFrame;
+        CGRect popUpViewFrame = popUpView.frame;
         
         if (self.animationGraphEntranceTime == 0) {
             
