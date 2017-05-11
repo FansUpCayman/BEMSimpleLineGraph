@@ -260,6 +260,7 @@
         horizontalReferenceLinesPathLayer.opacity = self.lineAlpha == 0 ? 0.1 : self.lineAlpha/2;
         horizontalReferenceLinesPathLayer.fillColor = nil;
         horizontalReferenceLinesPathLayer.lineWidth = self.referenceLineWidth/2;
+        horizontalReferenceLinesPathLayer.zPosition = -1;
         if(self.lineDashPatternForReferenceXAxisLines) {
             horizontalReferenceLinesPathLayer.lineDashPattern = self.lineDashPatternForReferenceXAxisLines;
         }
