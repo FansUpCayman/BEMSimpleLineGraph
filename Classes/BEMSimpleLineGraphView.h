@@ -516,8 +516,7 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 /** Optional method that gets called if you are using a custom popup view.  This method allows you to modify your popup view for different graph indices
  @param graph The graph object requesting the padding value.
  @param popupView The popup view owned by the graph that needs to be modified
- @param index The index of the element associated with the popup view
- @return The custom popup view to use */
+ @param index The index of the element associated with the popup view */
 - (void)lineGraph:(BEMSimpleLineGraphView *)graph modifyPopupView:(UIView *)popupView forIndex:(NSUInteger)index;
 
 
