@@ -367,6 +367,7 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 @property (nonatomic) CGSize headPointShadowOffset;
 @property (nonatomic) float headPointShadowRadius;
 @property (nonatomic) float headPointShadowOpacity;
+@property (nonatomic) BOOL headPointIsAnimating;
 
 - (CGRect)drawableGraphArea;
 

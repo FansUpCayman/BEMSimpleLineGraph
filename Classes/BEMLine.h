@@ -148,6 +148,7 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 @property (nonatomic) CGSize headPointShadowOffset;
 @property (nonatomic) float headPointShadowRadius;
 @property (nonatomic) float headPointShadowOpacity;
+@property (nonatomic) BOOL headPointIsAnimating;
 
 //----- BEZIER CURVE -----//
 

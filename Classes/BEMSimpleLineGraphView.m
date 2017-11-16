@@ -208,6 +208,9 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     _averageLine = [[BEMAverageLine alloc] init];
     
     _permanentPopups = [NSMutableArray array];
+    
+    // Set Head Point Is Animating
+    _headPointIsAnimating = NO;
 }
 
 - (void)prepareForInterfaceBuilder {
@@ -716,7 +719,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     line.headPointShadowOffset = self.headPointShadowOffset;
     line.headPointShadowRadius = self.headPointShadowRadius;
     line.headPointShadowOpacity = self.headPointShadowOpacity;
-    
+    line.headPointIsAnimating = self.headPointIsAnimating;
+
     [self addSubview:line];
     [self sendSubviewToBack:line];
     [self sendSubviewToBack:self.backgroundXAxis];

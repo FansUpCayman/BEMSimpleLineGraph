@@ -210,14 +210,16 @@
         headPointOuterLayer.path = [UIBezierPath bezierPathWithOvalInRect:headPointLayerBounds].CGPath;
         headPointOuterLayer.fillColor = self.headPointOuterColor.CGColor;
         
-        CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
-        scaleAnimation.duration = 0.7;
-        scaleAnimation.repeatCount = HUGE_VALF;
-        scaleAnimation.autoreverses = YES;
-        scaleAnimation.fromValue = @(1.0);
-        scaleAnimation.toValue = @(self.headPointInnerRadius / self.headPointOuterRadius);
-        [headPointOuterLayer addAnimation:scaleAnimation forKey:@"scaleAnimation"];
-
+        if (self.headPointIsAnimating) {
+            CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+            scaleAnimation.duration = 0.7;
+            scaleAnimation.repeatCount = HUGE_VALF;
+            scaleAnimation.autoreverses = YES;
+            scaleAnimation.fromValue = @(1.0);
+            scaleAnimation.toValue = @(self.headPointInnerRadius / self.headPointOuterRadius);
+            [headPointOuterLayer addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+        }
+        
         headPointInerLayer.path = [UIBezierPath bezierPathWithArcCenter:CGPointMake(self.headPointOuterRadius, self.headPointOuterRadius) radius:self.headPointInnerRadius startAngle:0 endAngle:2 * M_PI clockwise:YES].CGPath;
         headPointInerLayer.fillColor = self.headPointInnerColor.CGColor;
         
