@@ -710,6 +710,12 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     
     line.headPointOuterRadius = self.headPointOuterRadius;
     line.headPointInnerRadius = self.headPointInnerRadius;
+    line.headPointOuterColor = self.headPointOuterColor;
+    line.headPointInnerColor = self.headPointInnerColor;
+    line.headPointShadowColor = self.headPointShadowColor;
+    line.headPointShadowOffset = self.headPointShadowOffset;
+    line.headPointShadowRadius = self.headPointShadowRadius;
+    line.headPointShadowOpacity = self.headPointShadowOpacity;
     
     [self addSubview:line];
     [self sendSubviewToBack:line];

@@ -142,7 +142,12 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 
 @property (nonatomic) float headPointOuterRadius;
 @property (nonatomic) float headPointInnerRadius;
-
+@property (strong, nonatomic) UIColor *headPointOuterColor;
+@property (strong, nonatomic) UIColor *headPointInnerColor;
+@property (strong, nonatomic) UIColor *headPointShadowColor;
+@property (nonatomic) CGSize headPointShadowOffset;
+@property (nonatomic) float headPointShadowRadius;
+@property (nonatomic) float headPointShadowOpacity;
 
 //----- BEZIER CURVE -----//
 

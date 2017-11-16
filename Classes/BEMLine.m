@@ -201,29 +201,36 @@
     
     CALayer *headPointLayer;
     if (self.points.count > 0) {
-        UIGraphicsBeginImageContextWithOptions(CGSizeMake(2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius), NO, 0.0);
+        CAShapeLayer *headPointOuterLayer = [CAShapeLayer new];
+        CAShapeLayer *headPointInerLayer = [CAShapeLayer new];
+
+        CGRect headPointLayerBounds = CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius);
         
-        UIBezierPath *outerPath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius)];
-        [self.color setFill];
-        [outerPath fill];
+        headPointOuterLayer.frame = headPointLayerBounds;
+        headPointOuterLayer.path = [UIBezierPath bezierPathWithOvalInRect:headPointLayerBounds].CGPath;
+        headPointOuterLayer.fillColor = self.headPointOuterColor.CGColor;
         
-        UIBezierPath *innerPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(self.headPointOuterRadius, self.headPointOuterRadius) radius:self.headPointInnerRadius startAngle:0 endAngle:2 * M_PI clockwise:YES];
-        [[UIColor whiteColor] setFill];
-        [innerPath fill];
-        
-        UIImage *headPointImage = UIGraphicsGetImageFromCurrentImageContext();
-        
-        UIGraphicsEndImageContext();
+        CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+        scaleAnimation.duration = 0.7;
+        scaleAnimation.repeatCount = HUGE_VALF;
+        scaleAnimation.autoreverses = YES;
+        scaleAnimation.fromValue = @(1.0);
+        scaleAnimation.toValue = @(self.headPointInnerRadius / self.headPointOuterRadius);
+        [headPointOuterLayer addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+
+        headPointInerLayer.path = [UIBezierPath bezierPathWithArcCenter:CGPointMake(self.headPointOuterRadius, self.headPointOuterRadius) radius:self.headPointInnerRadius startAngle:0 endAngle:2 * M_PI clockwise:YES].CGPath;
+        headPointInerLayer.fillColor = self.headPointInnerColor.CGColor;
         
         headPointLayer = [CALayer new];
-        headPointLayer.bounds = CGRectMake(0, 0, 2 * self.headPointOuterRadius, 2 * self.headPointOuterRadius);
+        headPointLayer.bounds = headPointLayerBounds;
         headPointLayer.position = [(NSValue *)self.points.lastObject CGPointValue];
-        headPointLayer.contents = (id)headPointImage.CGImage;
+        [headPointLayer addSublayer:headPointOuterLayer];
+        [headPointLayer addSublayer:headPointInerLayer];
         
-        headPointLayer.shadowColor = self.color.CGColor;
-        headPointLayer.shadowOffset = CGSizeMake(0, 3);
-        headPointLayer.shadowRadius = 4;
-        headPointLayer.shadowOpacity = 0.5;
+        headPointLayer.shadowColor = self.headPointShadowColor.CGColor;
+        headPointLayer.shadowOffset = self.headPointShadowOffset;
+        headPointLayer.shadowRadius = self.headPointShadowRadius;
+        headPointLayer.shadowOpacity = self.headPointShadowOpacity;
         
         [self.layer addSublayer:headPointLayer];
     }
