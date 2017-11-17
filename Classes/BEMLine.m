@@ -217,6 +217,7 @@
             scaleAnimation.autoreverses = YES;
             scaleAnimation.fromValue = @(1.0);
             scaleAnimation.toValue = @(self.headPointInnerRadius / self.headPointOuterRadius);
+            scaleAnimation.removedOnCompletion = NO;
             [headPointOuterLayer addAnimation:scaleAnimation forKey:@"scaleAnimation"];
         }
         
