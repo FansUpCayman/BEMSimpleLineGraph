@@ -35,6 +35,7 @@
         _enableLeftReferenceFrameLine = YES;
         _enableBottomReferenceFrameLine = YES;
         _interpolateNullValues = YES;
+        self.clearsContextBeforeDrawing = NO;
     }
     return self;
 }
