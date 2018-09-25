@@ -883,12 +883,16 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     }
     __block NSUInteger lastMatchIndex;
     
+    __weak typeof(self) weakSelf = self;
     NSMutableArray *overlapLabels = [NSMutableArray arrayWithCapacity:0];
     [xAxisLabels enumerateObjectsUsingBlock:^(UILabel *label, NSUInteger idx, BOOL *stop) {
+        if(!weakSelf) { return; }
+        typeof(self) strongSelf = weakSelf;
+        
         if (idx == 0) {
             lastMatchIndex = 0;
         } else { // Skip first one
-            UILabel *prevLabel = [xAxisLabels objectAtIndex:lastMatchIndex];
+            UILabel *prevLabel = [strongSelf->xAxisLabels objectAtIndex:lastMatchIndex];
             CGRect r = CGRectIntersection(prevLabel.frame, label.frame);
             if (CGRectIsNull(r)) lastMatchIndex = idx;
             else [overlapLabels addObject:label]; // Overlapped
@@ -1078,7 +1082,10 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     __block NSUInteger lastMatchIndex = 0;
     NSMutableArray *overlapLabels = [NSMutableArray arrayWithCapacity:0];
     
+    __weak typeof(self) weakSelf = self;
     [yAxisLabels enumerateObjectsUsingBlock:^(UILabel *label, NSUInteger idx, BOOL *stop) {
+        if(!weakSelf) { return; }
+        typeof(self) strongSelf = weakSelf;
         
         if (idx==0) lastMatchIndex = 0;
         else { // Skip first one
@@ -1092,7 +1099,7 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
         BOOL fullyContainsLabel = CGRectContainsRect(self.bounds, label.frame);
         if (!fullyContainsLabel) {
             [overlapLabels addObject:label];
-            [yAxisLabelPoints removeObject:@(label.center.y)];
+            [strongSelf->yAxisLabelPoints removeObject:@(label.center.y)];
         }
     }];
     
@@ -1279,6 +1286,26 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 
 #pragma mark - Calculations
 
+- (NSNumber *)calculateMinimumPointValue {
+    NSArray *filteredArray = [self calculationDataPoints];
+    if (filteredArray.count == 0) return 0;
+    
+    NSExpression *expression = [NSExpression expressionForFunction:@"min:" arguments:@[[NSExpression expressionForConstantValue:filteredArray]]];
+    NSNumber *value = [expression expressionValueWithObject:nil context:nil];
+    
+    return value;
+}
+
+- (NSNumber *)calculateMaximumPointValue {
+    NSArray *filteredArray = [self calculationDataPoints];
+    if (filteredArray.count == 0) return 0;
+    
+    NSExpression *expression = [NSExpression expressionForFunction:@"max:" arguments:@[[NSExpression expressionForConstantValue:filteredArray]]];
+    NSNumber *value = [expression expressionValueWithObject:nil context:nil];
+    
+    return value;
+}
+
 - (NSArray *)calculationDataPoints {
     NSPredicate *filter = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
         NSNumber *value = (NSNumber *)evaluatedObject;
@@ -1425,9 +1452,13 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
 #pragma clang diagnostic pop
         }
         
+        __weak typeof(self) weakSelf = self;
         [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+            if(!weakSelf) { return; }
+            typeof(self) strongSelf = weakSelf;
+            
             if (self.alwaysDisplayDots == NO && self.displayDotsOnly == NO) {
-                closestDot.alpha = 0;
+                strongSelf->closestDot.alpha = 0;
             }
             
             self.touchInputLine.alpha = 0;
