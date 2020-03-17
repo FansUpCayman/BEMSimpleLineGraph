@@ -87,6 +87,9 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 /** Draws everything but the main line on the graph; correlates to the \p displayDotsOnly property.  Default: NO */
 @property (assign, nonatomic) BOOL disableMainLine;
 
+/** */
+@property (assign, nonatomic) BOOL enableLeftDashlineForMissingPoints;
+@property (nonatomic, strong) NSArray *lineDashPatternForLeftMissingPoints;
 
 
 //----- COLORS -----//

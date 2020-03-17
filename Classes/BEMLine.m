@@ -158,6 +158,13 @@
     } else {
         // Remains empty path
     }
+//
+//    if (self.enableLeftDashlineForMissingPoints) {
+//        [self.points insertObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y)) atIndex:0];
+//        NSMutableArray *newXValues = [NSMutableArray arrayWithArray:self.arrayOfXValues];
+//        [newXValues insertObject:@(0) atIndex:0];
+//        self.arrayOfXValues = newXValues;
+//    }
     
     fillBottom = [self bottomFillPath];
     fillTop = [self topFillPath];
@@ -321,6 +328,28 @@
         [lineAndFillLayer addSublayer:addingPathLayer];
     }
     
+    
+    if (self.enableLeftDashlineForMissingPoints) {
+        UIBezierPath *dashlinePath = [BEMLine leftDashlinePathForMissingPoints: self.points];
+        CAShapeLayer *pathLayer = [CAShapeLayer layer];
+        pathLayer.frame = self.bounds;
+        pathLayer.path = dashlinePath.CGPath;
+        pathLayer.strokeColor = self.color.CGColor;
+        pathLayer.fillColor = nil;
+        pathLayer.opacity = self.lineAlpha;
+        pathLayer.lineWidth = self.lineWidth;
+        pathLayer.lineJoin = kCALineJoinBevel;
+        pathLayer.lineCap = kCALineCapRound;
+        pathLayer.lineDashPattern = self.lineDashPatternForLeftMissingPoints;
+        CALayer *addingPathLayer;
+        if (self.lineGradient){
+            addingPathLayer = [self backgroundGradientLayerForLayer:pathLayer];
+        } else {
+            addingPathLayer = pathLayer;
+        }
+        [lineAndFillLayer addSublayer:addingPathLayer];
+    }
+    
     if (self.animationTime > 0) {
         CALayer *maskLayer = [CALayer new];
         maskLayer.backgroundColor = [UIColor whiteColor].CGColor;
@@ -366,6 +395,8 @@
         animation.duration = self.animationTime;
         [headPointLayer addAnimation:animation forKey:@"position"];
     }
+    
+    
 
     if (self.averageLine.enableAverageLine == YES) {
         CAShapeLayer *averageLinePathLayer = [CAShapeLayer layer];
@@ -387,14 +418,25 @@
 }
 
 - (UIBezierPath *)topFillPath {
-    CGPoint topPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], 0);
-    CGPoint topPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], 0);
+    NSMutableArray *points = [self.points mutableCopy];
+    if (self.enableLeftDashlineForMissingPoints) {
+        [points addObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y))];
+    }
+    
+    NSMutableArray *xValues = [self.arrayOfXValues mutableCopy];
+    
+    if (self.enableLeftDashlineForMissingPoints) {
+        [xValues insertObject:@(0) atIndex:0];
+    }
+    
+    CGPoint topPointZero = CGPointMake([xValues.firstObject CGFloatValue], 0);
+    CGPoint topPointFull = CGPointMake([xValues.lastObject CGFloatValue], 0);
     
     UIBezierPath *path;
     if (self.bezierCurveIsEnabled) {
-        path = [BEMLine quadCurvedPathWithPoints:self.points];
+        path = [BEMLine quadCurvedPathWithPoints:points];
     } else {
-        path = [BEMLine linesToPoints:self.points];
+        path = [BEMLine linesToPoints:points];
     }
     [path addLineToPoint:topPointFull];
     [path addLineToPoint:topPointZero];
@@ -406,17 +448,27 @@
 - (UIBezierPath *)bottomFillPath {
     NSMutableArray *bottomPoints;
     if (self.bottomOffset == 0) {
-        bottomPoints = [NSMutableArray arrayWithArray:self.points];
+        bottomPoints = [self.points mutableCopy];
+        if (self.enableLeftDashlineForMissingPoints) {
+            [bottomPoints insertObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y)) atIndex:0];
+        }
     } else {
         bottomPoints = [NSMutableArray new];
+        if (self.enableLeftDashlineForMissingPoints) {
+            [bottomPoints addObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y))];
+        }
         for (NSValue *point in self.points) {
             NSValue *offsetPoint = [NSValue valueWithCGPoint:CGPointMake(point.CGPointValue.x, point.CGPointValue.y + self.bottomOffset)];
             [bottomPoints addObject:offsetPoint];
         }
     }
+    NSMutableArray *xValues = [self.arrayOfXValues mutableCopy];
 
-    CGPoint bottomPointZero = CGPointMake([self.arrayOfXValues.firstObject CGFloatValue], self.frame.size.height);
-    CGPoint bottomPointFull = CGPointMake([self.arrayOfXValues.lastObject CGFloatValue], self.frame.size.height);
+    if (self.enableLeftDashlineForMissingPoints) {
+        [xValues insertObject:@(0) atIndex:0];
+    }
+    CGPoint bottomPointZero = CGPointMake([xValues.firstObject CGFloatValue], self.frame.size.height);
+    CGPoint bottomPointFull = CGPointMake([xValues.lastObject CGFloatValue], self.frame.size.height);
 
     UIBezierPath *path;
     if (self.bezierCurveIsEnabled) {
@@ -455,6 +507,18 @@
     [twoMorePoints addObject:lastPoint];
     
     return [UIBezierPath interpolateCGPointsWithCatmullRom:twoMorePoints closed:NO alpha:0.5];
+}
+
++ (UIBezierPath *)leftDashlinePathForMissingPoints:(NSArray *)points {
+    
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    NSValue *value = points[0];
+    CGPoint p1 = [value CGPointValue];
+    
+    CGPoint p0 = CGPointMake(0, p1.y);
+    [path moveToPoint:p0];
+    [path addLineToPoint:p1];
+    return path;
 }
 
 - (void)animateForLayer:(CAShapeLayer *)shapeLayer withAnimationType:(BEMLineAnimation)animationType isAnimatingReferenceLine:(BOOL)shouldHalfOpacity {

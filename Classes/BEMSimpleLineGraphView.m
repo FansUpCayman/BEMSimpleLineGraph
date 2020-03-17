@@ -687,6 +687,9 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     line.enableLeftReferenceFrameLine = self.enableLeftReferenceAxisFrameLine;
     line.enableBottomReferenceFrameLine = self.enableBottomReferenceAxisFrameLine;
     
+    line.enableLeftDashlineForMissingPoints = self.enableLeftDashlineForMissingPoints;
+    line.lineDashPatternForLeftMissingPoints = self.lineDashPatternForLeftMissingPoints;
+    
     if (self.enableReferenceXAxisLines || self.enableReferenceYAxisLines) {
         line.enableRefrenceLines = YES;
         line.refrenceLineColor = self.colorReferenceLines;

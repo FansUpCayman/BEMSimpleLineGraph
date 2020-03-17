@@ -214,6 +214,8 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 /** If reference frames are enabled, this will enable/disable specific borders.  Default: NO */
 @property (nonatomic) BOOL enableTopReferenceAxisFrameLine;
 
+@property (assign, nonatomic) BOOL enableLeftDashlineForMissingPoints;
+@property (nonatomic, strong) NSArray *lineDashPatternForLeftMissingPoints;
 
 /// If set to YES, the dots representing the points on the graph will always be visible. Default value is NO.
 @property (nonatomic) BOOL alwaysDisplayDots;
