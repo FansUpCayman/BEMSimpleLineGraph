@@ -158,13 +158,6 @@
     } else {
         // Remains empty path
     }
-//
-//    if (self.enableLeftDashlineForMissingPoints) {
-//        [self.points insertObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y)) atIndex:0];
-//        NSMutableArray *newXValues = [NSMutableArray arrayWithArray:self.arrayOfXValues];
-//        [newXValues insertObject:@(0) atIndex:0];
-//        self.arrayOfXValues = newXValues;
-//    }
     
     fillBottom = [self bottomFillPath];
     fillTop = [self topFillPath];
@@ -440,15 +433,26 @@
 
 - (UIBezierPath *)topFillPath {
     NSMutableArray *points = [self.points mutableCopy];
-    if (self.enableLeftDashlineForMissingPoints) {
-        [points addObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y))];
-    }
     
     NSMutableArray *xValues = [self.arrayOfXValues mutableCopy];
     
+    
     if (self.enableLeftDashlineForMissingPoints) {
+        [points insertObject:points.firstObject atIndex:0];
+        [points insertObject:@(CGPointMake(0, [points.firstObject CGPointValue].y)) atIndex:0];
+        
+        [xValues insertObject:xValues.firstObject atIndex:0];
         [xValues insertObject:@(0) atIndex:0];
     }
+
+    if (self.enableRightDashlineForMissingPoints) {
+        [points addObject:points.lastObject];
+        [points addObject:@(CGPointMake(self.frame.size.width, [points.lastObject CGPointValue].y))];
+        
+        [xValues addObject:xValues.lastObject];
+        [xValues addObject:@(self.frame.size.width)];
+    }
+    
     
     CGPoint topPointZero = CGPointMake([xValues.firstObject CGFloatValue], 0);
     CGPoint topPointFull = CGPointMake([xValues.lastObject CGFloatValue], 0);
@@ -470,14 +474,8 @@
     NSMutableArray *bottomPoints;
     if (self.bottomOffset == 0) {
         bottomPoints = [self.points mutableCopy];
-        if (self.enableLeftDashlineForMissingPoints) {
-            [bottomPoints insertObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y)) atIndex:0];
-        }
     } else {
         bottomPoints = [NSMutableArray new];
-        if (self.enableLeftDashlineForMissingPoints) {
-            [bottomPoints addObject:@(CGPointMake(0, [self.points.firstObject CGPointValue].y))];
-        }
         for (NSValue *point in self.points) {
             NSValue *offsetPoint = [NSValue valueWithCGPoint:CGPointMake(point.CGPointValue.x, point.CGPointValue.y + self.bottomOffset)];
             [bottomPoints addObject:offsetPoint];
@@ -485,9 +483,22 @@
     }
     NSMutableArray *xValues = [self.arrayOfXValues mutableCopy];
 
+
     if (self.enableLeftDashlineForMissingPoints) {
+        [bottomPoints insertObject:bottomPoints.firstObject atIndex:0];
+        [bottomPoints insertObject:@(CGPointMake(0, [bottomPoints.firstObject CGPointValue].y)) atIndex:0];
+        
+        [xValues insertObject:xValues.firstObject atIndex:0];
         [xValues insertObject:@(0) atIndex:0];
     }
+    if (self.enableRightDashlineForMissingPoints) {
+        [bottomPoints addObject:bottomPoints.lastObject];
+        [bottomPoints addObject:@(CGPointMake(self.frame.size.width, [bottomPoints.lastObject CGPointValue].y))];
+        
+        [xValues addObject:xValues.lastObject];
+        [xValues addObject:@(self.frame.size.width)];
+    }
+    
     CGPoint bottomPointZero = CGPointMake([xValues.firstObject CGFloatValue], self.frame.size.height);
     CGPoint bottomPointFull = CGPointMake([xValues.lastObject CGFloatValue], self.frame.size.height);
 
