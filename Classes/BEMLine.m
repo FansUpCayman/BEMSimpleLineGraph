@@ -330,7 +330,7 @@
     
     
     if (self.enableLeftDashlineForMissingPoints) {
-        UIBezierPath *dashlinePath = [BEMLine leftDashlinePathForMissingPoints: self.points];
+        UIBezierPath *dashlinePath = [self leftDashlinePathForMissingPoints];
         CAShapeLayer *pathLayer = [CAShapeLayer layer];
         pathLayer.frame = self.bounds;
         pathLayer.path = dashlinePath.CGPath;
@@ -341,6 +341,27 @@
         pathLayer.lineJoin = kCALineJoinBevel;
         pathLayer.lineCap = kCALineCapRound;
         pathLayer.lineDashPattern = self.lineDashPatternForLeftMissingPoints;
+        CALayer *addingPathLayer;
+        if (self.lineGradient){
+            addingPathLayer = [self backgroundGradientLayerForLayer:pathLayer];
+        } else {
+            addingPathLayer = pathLayer;
+        }
+        [lineAndFillLayer addSublayer:addingPathLayer];
+    }
+    
+    if (self.enableRightDashlineForMissingPoints) {
+        UIBezierPath *dashlinePath = [self rightDashlinePathForMissingPoints];
+        CAShapeLayer *pathLayer = [CAShapeLayer layer];
+        pathLayer.frame = self.bounds;
+        pathLayer.path = dashlinePath.CGPath;
+        pathLayer.strokeColor = self.color.CGColor;
+        pathLayer.fillColor = nil;
+        pathLayer.opacity = self.lineAlpha;
+        pathLayer.lineWidth = self.lineWidth;
+        pathLayer.lineJoin = kCALineJoinBevel;
+        pathLayer.lineCap = kCALineCapRound;
+        pathLayer.lineDashPattern = self.lineDashPatternForRightMissingPoints;
         CALayer *addingPathLayer;
         if (self.lineGradient){
             addingPathLayer = [self backgroundGradientLayerForLayer:pathLayer];
@@ -509,10 +530,10 @@
     return [UIBezierPath interpolateCGPointsWithCatmullRom:twoMorePoints closed:NO alpha:0.5];
 }
 
-+ (UIBezierPath *)leftDashlinePathForMissingPoints:(NSArray *)points {
+- (UIBezierPath *)leftDashlinePathForMissingPoints {
     
     UIBezierPath *path = [UIBezierPath bezierPath];
-    NSValue *value = points[0];
+    NSValue *value = self.points[0];
     CGPoint p1 = [value CGPointValue];
     
     CGPoint p0 = CGPointMake(0, p1.y);
@@ -520,6 +541,19 @@
     [path addLineToPoint:p1];
     return path;
 }
+
+- (UIBezierPath *)rightDashlinePathForMissingPoints {
+    
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    NSValue *value = self.points.lastObject;
+    CGPoint p0 = [value CGPointValue];
+    
+    CGPoint p1 = CGPointMake(self.frame.size.width, p0.y);
+    [path moveToPoint:p0];
+    [path addLineToPoint:p1];
+    return path;
+}
+
 
 - (void)animateForLayer:(CAShapeLayer *)shapeLayer withAnimationType:(BEMLineAnimation)animationType isAnimatingReferenceLine:(BOOL)shouldHalfOpacity {
     if (animationType == BEMLineAnimationNone) return;

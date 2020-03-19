@@ -689,6 +689,8 @@ typedef NS_ENUM(NSInteger, BEMInternalTags)
     
     line.enableLeftDashlineForMissingPoints = self.enableLeftDashlineForMissingPoints;
     line.lineDashPatternForLeftMissingPoints = self.lineDashPatternForLeftMissingPoints;
+    line.enableRightDashlineForMissingPoints = self.enableRightDashlineForMissingPoints;
+    line.lineDashPatternForRightMissingPoints = self.lineDashPatternForRightMissingPoints;
     
     if (self.enableReferenceXAxisLines || self.enableReferenceYAxisLines) {
         line.enableRefrenceLines = YES;

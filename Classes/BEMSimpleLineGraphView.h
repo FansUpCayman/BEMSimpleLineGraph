@@ -216,6 +216,8 @@ IB_DESIGNABLE @interface BEMSimpleLineGraphView : UIView <UIGestureRecognizerDel
 
 @property (assign, nonatomic) BOOL enableLeftDashlineForMissingPoints;
 @property (nonatomic, strong) NSArray *lineDashPatternForLeftMissingPoints;
+@property (assign, nonatomic) BOOL enableRightDashlineForMissingPoints;
+@property (nonatomic, strong) NSArray *lineDashPatternForRightMissingPoints;
 
 /// If set to YES, the dots representing the points on the graph will always be visible. Default value is NO.
 @property (nonatomic) BOOL alwaysDisplayDots;

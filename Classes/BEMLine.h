@@ -90,6 +90,8 @@ typedef NS_ENUM(NSUInteger, BEMLineGradientDirection) {
 /** */
 @property (assign, nonatomic) BOOL enableLeftDashlineForMissingPoints;
 @property (nonatomic, strong) NSArray *lineDashPatternForLeftMissingPoints;
+@property (assign, nonatomic) BOOL enableRightDashlineForMissingPoints;
+@property (nonatomic, strong) NSArray *lineDashPatternForRightMissingPoints;
 
 
 //----- COLORS -----//
